@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.kcm-nixi.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"algolia":{"appID":"I6ZXULRUK2","apiKey":"011921127afa23cc420635a060495b70","indexName":"kcm-nixi's blog","hits":{"per_page":10},"labels":{"input_placeholder":"输入你的查询内容","hits_empty":"没有找到你所查询的内容 : ${query}","hits_stats":"找到${hits}条数据"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="民航气象报文 本文依据&lt;&lt;中华人民共和国民用航空行业标准 民用航空气象 &gt;&gt; 所编写  民航气象报文由两类三种报文所组成,从类别上来看,有气象观测报文和气象预测报.从种类上来看,有例行观测报(METAR),特殊观测报文(SPECI)和天气预报(TAF)三种.本文将分门别类的就三种报文的解析方式做出说明. 气象观测报(METAR&#x2F;SPECI)例行观测报(METAR)观测频次依">
+<meta property="og:type" content="article">
+<meta property="og:title" content="中国民航气象报文规范">
+<meta property="og:url" content="https://blog.kcm-nixi.cn/2021/08/31/%E4%B8%AD%E5%9B%BD%E6%B0%91%E8%88%AA%E6%B0%94%E8%B1%A1%E6%8A%A5%E6%96%87%E8%A7%84%E8%8C%83/index.html">
+<meta property="og:site_name" content="KCM-NIXI&#39;s Blog">
+<meta property="og:description" content="民航气象报文 本文依据&lt;&lt;中华人民共和国民用航空行业标准 民用航空气象 &gt;&gt; 所编写  民航气象报文由两类三种报文所组成,从类别上来看,有气象观测报文和气象预测报.从种类上来看,有例行观测报(METAR),特殊观测报文(SPECI)和天气预报(TAF)三种.本文将分门别类的就三种报文的解析方式做出说明. 气象观测报(METAR&#x2F;SPECI)例行观测报(METAR)观测频次依">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.kcm-nixi/08/31/%E4%B8%AD%E5%9B%BD%E6%B0%91%E8%88%AA%E6%B0%94%E8%B1%A1%E6%8A%A5%E6%96%87%E8%A7%84%E8%8C%83/1.jpg">
+<meta property="og:image" content="https://blog.kcm-nixi/METAR/2.jpg">
+<meta property="og:image" content="https://blog.kcm-nixi/METAR/3.jpg">
+<meta property="og:image" content="https://blog.kcm-nixi/METAR/4.jpg">
+<meta property="og:image" content="https://blog.kcm-nixi/METAR/5.jpg">
+<meta property="og:image" content="https://blog.kcm-nixi/METAR/6.jpg">
+<meta property="og:image" content="https://blog.kcm-nixi/TAF/1.jpg">
+<meta property="og:image" content="https://blog.kcm-nixi/TAF/2.jpg">
+<meta property="og:image" content="https://blog.kcm-nixi/TAF/3.jpg">
+<meta property="og:image" content="https://blog.kcm-nixi/TAF/4.jpg">
+<meta property="og:image" content="https://blog.kcm-nixi/TAF/5.jpg">
+<meta property="og:image" content="https://blog.kcm-nixi/TAF/6.jpg">
+<meta property="og:image" content="https://blog.kcm-nixi/TAF/7.jpg">
+<meta property="article:published_time" content="2021-08-31T03:09:48.000Z">
+<meta property="article:modified_time" content="2021-08-31T03:49:18.114Z">
+<meta property="article:author" content="超级有节操的逆袭">
+<meta property="article:tag" content="民航">
+<meta property="article:tag" content="气象">
+<meta property="article:tag" content="行业标准">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.kcm-nixi/08/31/%E4%B8%AD%E5%9B%BD%E6%B0%91%E8%88%AA%E6%B0%94%E8%B1%A1%E6%8A%A5%E6%96%87%E8%A7%84%E8%8C%83/1.jpg">
+
+<link rel="canonical" href="https://blog.kcm-nixi.cn/2021/08/31/%E4%B8%AD%E5%9B%BD%E6%B0%91%E8%88%AA%E6%B0%94%E8%B1%A1%E6%8A%A5%E6%96%87%E8%A7%84%E8%8C%83/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>中国民航气象报文规范 | KCM-NIXI's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8b42461a9400c8e94260e22af4c24718";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">KCM-NIXI's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.kcm-nixi.cn/2021/08/31/%E4%B8%AD%E5%9B%BD%E6%B0%91%E8%88%AA%E6%B0%94%E8%B1%A1%E6%8A%A5%E6%96%87%E8%A7%84%E8%8C%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+      <meta itemprop="name" content="超级有节操的逆袭">
+      <meta itemprop="description" content="随便写些有的没得,主要是给将来的我看的,别太指望了">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="KCM-NIXI's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          中国民航气象报文规范
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-08-31 11:09:48 / 修改时间：11:49:18" itemprop="dateCreated datePublished" datetime="2021-08-31T11:09:48+08:00">2021-08-31</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%90%86%E8%AE%BA%E7%9F%A5%E8%AF%86/" itemprop="url" rel="index"><span itemprop="name">理论知识</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2021/08/31/%E4%B8%AD%E5%9B%BD%E6%B0%91%E8%88%AA%E6%B0%94%E8%B1%A1%E6%8A%A5%E6%96%87%E8%A7%84%E8%8C%83/" class="post-meta-item leancloud_visitors" data-flag-title="中国民航气象报文规范" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/08/31/%E4%B8%AD%E5%9B%BD%E6%B0%91%E8%88%AA%E6%B0%94%E8%B1%A1%E6%8A%A5%E6%96%87%E8%A7%84%E8%8C%83/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/08/31/%E4%B8%AD%E5%9B%BD%E6%B0%91%E8%88%AA%E6%B0%94%E8%B1%A1%E6%8A%A5%E6%96%87%E8%A7%84%E8%8C%83/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="民航气象报文"><a href="#民航气象报文" class="headerlink" title="民航气象报文"></a>民航气象报文</h1><blockquote>
+<p>本文依据&lt;&lt;中华人民共和国民用航空行业标准 民用航空气象 &gt;&gt; 所编写</p>
+</blockquote>
+<p>民航气象报文由两类三种报文所组成,从类别上来看,有气象观测报文和气象预测报.从种类上来看,有例行观测报(METAR),特殊观测报文(SPECI)和天气预报(TAF)三种.本文将分门别类的就三种报文的解析方式做出说明.</p>
+<h2 id="气象观测报-METAR-SPECI"><a href="#气象观测报-METAR-SPECI" class="headerlink" title="气象观测报(METAR/SPECI)"></a>气象观测报(METAR/SPECI)</h2><h3 id="例行观测报-METAR"><a href="#例行观测报-METAR" class="headerlink" title="例行观测报(METAR)"></a>例行观测报(METAR)</h3><h4 id="观测频次"><a href="#观测频次" class="headerlink" title="观测频次"></a>观测频次</h4><p>依照 MH/T 4016.1-2004 标准中所作的规定<br>例行观测应每小时观测一次,也可每半小时观测一次 观测时次份以下三种:</p>
+<ol>
+<li>24小时观测:每日16:00(UTC时间)至次日16:00每半小时或一小时观测一次</li>
+<li>13小时观测:每日00:00(UTC)至12:00每半小时或一小时观测一次</li>
+<li>不定时观测:在有飞行活动期间,每半小时或一小时观测一次</li>
+</ol>
+<h4 id="数据项"><a href="#数据项" class="headerlink" title="数据项"></a>数据项</h4><h5 id="观测数据项"><a href="#观测数据项" class="headerlink" title="观测数据项"></a>观测数据项</h5><p>例行观测的数据由以下项目组成</p>
+<ul>
+<li>地面风向和风速</li>
+<li>主导能见度(跑道视程,气象光学视程)</li>
+<li>云或垂直能见度</li>
+<li>天气现象</li>
+<li>气温和湿度</li>
+<li>气压</li>
+<li>日最高温最低温</li>
+<li>降水量</li>
+<li>积雪深度</li>
+</ul>
+<h5 id="观测报文数据项"><a href="#观测报文数据项" class="headerlink" title="观测报文数据项"></a>观测报文数据项</h5><p>在观测报文中将以顺序包含以下内容</p>
+<ul>
+<li>报文种类标识MEART</li>
+<li>机场四字码,如ZPPP</li>
+<li>观测时间,如101500Z</li>
+<li>自动报告标识,AUTO</li>
+<li>地面风向和风速,如05004MPS指代风向050,风速04mps 此项含有特殊标识VRB,代表风向不定</li>
+<li>主导能见度 </li>
+<li>跑道视程</li>
+<li>现在天气情况</li>
+<li>云或垂直能见度</li>
+<li>气温和露点温度</li>
+<li>修正海平面气压</li>
+<li>补充情报</li>
+</ul>
+<p>以上数据项并非每一条报文都会包含全部数据,例如</p>
+<blockquote>
+<p>METAR ZPWS 101500Z AUTO VRB01MPS //// // ///////// 14/13 Q1022 = NNNN</p>
+</blockquote>
+<p>此报文中便缺失了主导能见度以及云或垂直能见度等信息</p>
+<h4 id="观测报文范例"><a href="#观测报文范例" class="headerlink" title="观测报文范例"></a>观测报文范例</h4><blockquote>
+<p>METAR ZGGG 010800Z 05004MPS 280V100 7000 -TSRA FEW033CB 31/24 Q1013 TEMPO 2000 TSRA SCT026CB BKN030</p>
+</blockquote>
+<p>以上报文的含义为:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">定时气象观测报文(METAR)</span><br><span class="line">广州白云机场(ZGGG)</span><br><span class="line">观测时间UTC时间1日8:00,北京时间1日16:00(010800Z)</span><br><span class="line">风向050度风速4m/s(05004MPS)</span><br><span class="line">风向范围280°~100°(280V100)</span><br><span class="line">能见度7000米(7000)</span><br><span class="line">小雷雨天气(-TSRA)</span><br><span class="line">少云,云底高度3300英尺</span><br><span class="line">云层类型积雨云(FEW033CB)</span><br><span class="line">温度31摄氏度,露点24摄氏度(31/24)</span><br><span class="line">修正海平面气压1013(Q1013)</span><br><span class="line">气象变化趋势短时(TEMPO)</span><br><span class="line">趋势天气为:短时能见度2000米(2000)</span><br><span class="line">短时雷雨天气(TSRA)</span><br><span class="line">短时有2600英尺较少积雨云(SCT026CB)</span><br><span class="line">3000英尺多云(BKN030).</span><br></pre></td></tr></table></figure>
+
+<h3 id="特殊观测报-SPECI"><a href="#特殊观测报-SPECI" class="headerlink" title="特殊观测报(SPECI)"></a>特殊观测报(SPECI)</h3><p>当在两次定时观测之间,出现地面风,能见度,跑道视程,天气现象,气温和云等气象要素中的一种或多种出现特殊变化时会进行特殊观测.</p>
+<h4 id="特殊观测报发布条件"><a href="#特殊观测报发布条件" class="headerlink" title="特殊观测报发布条件"></a>特殊观测报发布条件</h4><ul>
+<li>地面风向与最近一定时报告相差大于或等于60°</li>
+<li>风速变化大于5m/s</li>
+<li>阵风与之前报告的风速相比增加大于5m/s,且平均风速变化大于8m/s</li>
+<li>风速变化后通过了对飞行有影响的风速阈值</li>
+<li>主导能见度变化经过800m,1500m,3000m时</li>
+<li>跑到视程变化经过150m,350m,600m,800m时</li>
+<li>当下列天气现象发生,终止,或强度变化时<ul>
+<li>冻降水</li>
+<li>中或大的降水</li>
+<li>尘暴</li>
+<li>沙暴</li>
+</ul>
+</li>
+<li>当下列天气现象发生,终止时<ul>
+<li>冰晶</li>
+<li>冻雾</li>
+<li>低吹尘,低吹沙,低吹雪</li>
+<li>高吹尘,高吹沙,高吹雪</li>
+<li>雷暴</li>
+<li>龙卷风</li>
+</ul>
+</li>
+<li>当BKN或OVC云量的云底高度变化通过30m,60m,150m,300m时</li>
+<li>当云底高度低于450m的云层云量变化时</li>
+<li>当垂直能见度变化通过30m,60m,150m,300m时</li>
+</ul>
+<h4 id="SPECI报文范例"><a href="#SPECI报文范例" class="headerlink" title="SPECI报文范例"></a>SPECI报文范例</h4><p>SPECI报文的格式与METAR报文的格式相同,如</p>
+<blockquote>
+<p>SPECI ZPJH 101030Z 34008MPS 9999 FEW023 31/16 Q1010 NOSIG = NNNN</p>
+</blockquote>
+<p>可按METAR报文解析方式解析</p>
+<h3 id="METAR与SPECI报文模板"><a href="#METAR与SPECI报文模板" class="headerlink" title="METAR与SPECI报文模板"></a>METAR与SPECI报文模板</h3>
+<img src="//blog.kcm-nixi/08/31/%E4%B8%AD%E5%9B%BD%E6%B0%91%E8%88%AA%E6%B0%94%E8%B1%A1%E6%8A%A5%E6%96%87%E8%A7%84%E8%8C%83/1.jpg" class title="This is an example imag2e">
+<p><img src="//blog.kcm-nixi/METAR/2.jpg" alt="METAR报文模板2"><br><img src="//blog.kcm-nixi/METAR/3.jpg" alt="METAR报文模板3"><br><img src="//blog.kcm-nixi/METAR/4.jpg" alt="METAR报文模板4"><br><img src="//blog.kcm-nixi/METAR/5.jpg" alt="METAR报文模板5"><br><img src="//blog.kcm-nixi/METAR/6.jpg" alt="METAR报文模板6"></p>
+<h2 id="气象预报-TAF"><a href="#气象预报-TAF" class="headerlink" title="气象预报(TAF)"></a>气象预报(TAF)</h2><h3 id="气象预报时效性要求"><a href="#气象预报时效性要求" class="headerlink" title="气象预报时效性要求"></a>气象预报时效性要求</h3><p>机场气象预报的有效时间段应不小于9小时,不大于24小时,有效时段小于12小时的机场预报应当每3小时发布一次,有效时间大于12小时小于24小时的机场预报应当每6小时发布一次.</p>
+<h3 id="气象预报报文数据项"><a href="#气象预报报文数据项" class="headerlink" title="气象预报报文数据项"></a>气象预报报文数据项</h3><ul>
+<li>预报类型标识,如TAF</li>
+<li>机场四字码</li>
+<li>气象预报的发布时间</li>
+<li>预报缺报标识(适用时)</li>
+<li>预报的有效日期和时段</li>
+<li>预报取消标识(适用时)</li>
+<li>地面风</li>
+<li>能见度</li>
+<li>天气现象</li>
+<li>云</li>
+<li>气温</li>
+<li>有效时段内的重要气象变化</li>
+</ul>
+<h3 id="气象预报报文解析范例"><a href="#气象预报报文解析范例" class="headerlink" title="气象预报报文解析范例"></a>气象预报报文解析范例</h3><blockquote>
+<p>TAF ZPDQ 100708Z 1009/1018 16004MPS 9999 SCT026 TX11/1009Z TN02/1018Z BECMG 1011/1012 16004MPS = NNNN</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">气象预报(TAF)</span><br><span class="line">迪庆香格里拉机场(ZPDQ)</span><br><span class="line">预报时间UTC10日7:08(100708Z)</span><br><span class="line">预报有效时间UTC10日9:00至10日18:00(1009/1018)</span><br><span class="line">风向160°,风速4m/s(16004MPS)</span><br><span class="line">能见度9999米(9999)</span><br><span class="line">较少云,云底高度2600英尺(SCT026)</span><br><span class="line">最高温11℃,出现时间10日9点(TX11/1009Z)</span><br><span class="line">最低温2℃,出现时间10日18点(TN02/1018Z)</span><br><span class="line">天气变化标识(BECMG)</span><br><span class="line">10日11点至10日12点的天气变化(1011/1012)</span><br><span class="line">风向160,风速4m/s(16004MPS)</span><br></pre></td></tr></table></figure>
+
+<h3 id="TAF报文模板"><a href="#TAF报文模板" class="headerlink" title="TAF报文模板"></a>TAF报文模板</h3><p><img src="//blog.kcm-nixi/TAF/1.jpg" alt="TAF报文模板1"><br><img src="//blog.kcm-nixi/TAF/2.jpg" alt="TAF报文模板2"><br><img src="//blog.kcm-nixi/TAF/3.jpg" alt="TAF报文模板3"><br><img src="//blog.kcm-nixi/TAF/4.jpg" alt="TAF报文模板4"><br><img src="//blog.kcm-nixi/TAF/5.jpg" alt="TAF报文模板5"><br><img src="//blog.kcm-nixi/TAF/6.jpg" alt="TAF报文模板6"><br><img src="//blog.kcm-nixi/TAF/7.jpg" alt="TAF报文模板7"></p>
+<h2 id="附录文件"><a href="#附录文件" class="headerlink" title="附录文件"></a>附录文件</h2><blockquote>
+<ul>
+<li><a target="_blank" rel="noopener" href="http://www.caac.gov.cn/XXGK/XXGK/GFXWJ/201511/P020151103347112314689.pdf" title="民用航空气象地面观测规范">民用航空气象地面观测规范</a></li>
+<li><a target="_blank" rel="noopener" href="http://www.caac.gov.cn/XXGK/XXGK/GFXWJ/201902/P020190218565700409361.pdf" title="民用航空气象预报规范">民用航空气象预报规范</a></li>
+</ul>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%B0%91%E8%88%AA/" rel="tag"># 民航</a>
+              <a href="/tags/%E6%B0%94%E8%B1%A1/" rel="tag"># 气象</a>
+              <a href="/tags/%E8%A1%8C%E4%B8%9A%E6%A0%87%E5%87%86/" rel="tag"># 行业标准</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/08/31/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E5%AE%B6%E5%BA%AD%E5%BD%B1%E9%9F%B3%E4%B8%AD%E5%BF%83(%E4%BA%8C)/" rel="prev" title="从零开始搭建你的家庭影音中心(二)">
+      <i class="fa fa-chevron-left"></i> 从零开始搭建你的家庭影音中心(二)
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B0%91%E8%88%AA%E6%B0%94%E8%B1%A1%E6%8A%A5%E6%96%87"><span class="nav-number">1.</span> <span class="nav-text">民航气象报文</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B0%94%E8%B1%A1%E8%A7%82%E6%B5%8B%E6%8A%A5-METAR-SPECI"><span class="nav-number">1.1.</span> <span class="nav-text">气象观测报(METAR&#x2F;SPECI)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%8B%E8%A1%8C%E8%A7%82%E6%B5%8B%E6%8A%A5-METAR"><span class="nav-number">1.1.1.</span> <span class="nav-text">例行观测报(METAR)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%82%E6%B5%8B%E9%A2%91%E6%AC%A1"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">观测频次</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E9%A1%B9"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">数据项</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%A7%82%E6%B5%8B%E6%95%B0%E6%8D%AE%E9%A1%B9"><span class="nav-number">1.1.1.2.1.</span> <span class="nav-text">观测数据项</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%A7%82%E6%B5%8B%E6%8A%A5%E6%96%87%E6%95%B0%E6%8D%AE%E9%A1%B9"><span class="nav-number">1.1.1.2.2.</span> <span class="nav-text">观测报文数据项</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%82%E6%B5%8B%E6%8A%A5%E6%96%87%E8%8C%83%E4%BE%8B"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">观测报文范例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%89%B9%E6%AE%8A%E8%A7%82%E6%B5%8B%E6%8A%A5-SPECI"><span class="nav-number">1.1.2.</span> <span class="nav-text">特殊观测报(SPECI)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%89%B9%E6%AE%8A%E8%A7%82%E6%B5%8B%E6%8A%A5%E5%8F%91%E5%B8%83%E6%9D%A1%E4%BB%B6"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">特殊观测报发布条件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SPECI%E6%8A%A5%E6%96%87%E8%8C%83%E4%BE%8B"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">SPECI报文范例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#METAR%E4%B8%8ESPECI%E6%8A%A5%E6%96%87%E6%A8%A1%E6%9D%BF"><span class="nav-number">1.1.3.</span> <span class="nav-text">METAR与SPECI报文模板</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B0%94%E8%B1%A1%E9%A2%84%E6%8A%A5-TAF"><span class="nav-number">1.2.</span> <span class="nav-text">气象预报(TAF)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B0%94%E8%B1%A1%E9%A2%84%E6%8A%A5%E6%97%B6%E6%95%88%E6%80%A7%E8%A6%81%E6%B1%82"><span class="nav-number">1.2.1.</span> <span class="nav-text">气象预报时效性要求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B0%94%E8%B1%A1%E9%A2%84%E6%8A%A5%E6%8A%A5%E6%96%87%E6%95%B0%E6%8D%AE%E9%A1%B9"><span class="nav-number">1.2.2.</span> <span class="nav-text">气象预报报文数据项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B0%94%E8%B1%A1%E9%A2%84%E6%8A%A5%E6%8A%A5%E6%96%87%E8%A7%A3%E6%9E%90%E8%8C%83%E4%BE%8B"><span class="nav-number">1.2.3.</span> <span class="nav-text">气象预报报文解析范例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TAF%E6%8A%A5%E6%96%87%E6%A8%A1%E6%9D%BF"><span class="nav-number">1.2.4.</span> <span class="nav-text">TAF报文模板</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%84%E5%BD%95%E6%96%87%E4%BB%B6"><span class="nav-number">1.3.</span> <span class="nav-text">附录文件</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="超级有节操的逆袭"
+      src="/uploads/avatar.jpg">
+  <p class="site-author-name" itemprop="name">超级有节操的逆袭</p>
+  <div class="site-description" itemprop="description">随便写些有的没得,主要是给将来的我看的,别太指望了</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">超级有节操的逆袭</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'zWVHiArCa20gFHLYt0uJXUau-gzGzoHsz',
+      appKey     : 'SLdIJkEQ6gS20lq3atQE2Sfz',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

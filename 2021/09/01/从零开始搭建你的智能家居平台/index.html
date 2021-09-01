@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.kcm-nixi.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"algolia":{"appID":"I6ZXULRUK2","apiKey":"011921127afa23cc420635a060495b70","indexName":"kcm-nixi's blog","hits":{"per_page":10},"labels":{"input_placeholder":"输入你的查询内容","hits_empty":"没有找到你所查询的内容 : ${query}","hits_stats":"找到${hits}条数据"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="从零开始搭建你的智能家居平台 Written by 超级有节操的逆袭      在本文中,将会详细的介绍什么是Homeassistant以及如何搭建你自己的智能家居平台     还是如同之前一样,我们先直接展示下智能家居平台搭建完成以后的效果           web端首页    App首页    App灯控  一些前置的基础知识常见的智能家居物联网通讯协议从目前市面上的产品来看,最常见的物联网">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从零开始搭建你的智能家居平台(一)">
+<meta property="og:url" content="https://blog.kcm-nixi.cn/2021/09/01/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/index.html">
+<meta property="og:site_name" content="KCM-NIXI&#39;s Blog">
+<meta property="og:description" content="从零开始搭建你的智能家居平台 Written by 超级有节操的逆袭      在本文中,将会详细的介绍什么是Homeassistant以及如何搭建你自己的智能家居平台     还是如同之前一样,我们先直接展示下智能家居平台搭建完成以后的效果           web端首页    App首页    App灯控  一些前置的基础知识常见的智能家居物联网通讯协议从目前市面上的产品来看,最常见的物联网">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/web%E7%AB%AF%E9%A6%96%E9%A1%B5.png">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/app%E9%A6%96%E9%A1%B5.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/app%E7%81%AF%E6%8E%A7.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E8%93%9D%E7%89%99Mesh.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E5%8D%95%E7%81%AB%E5%BC%80%E5%85%B3%E6%8E%A5%E7%BA%BF.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E9%9B%B6%E7%81%AB%E6%8E%A5%E7%BA%BF.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/truenas%E5%AE%89%E8%A3%85ha.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E8%B7%AF%E7%94%B1%E5%99%A8%E5%88%86%E9%85%8D.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/HACS.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E4%BB%93%E5%BA%93%E5%9C%B0%E5%9D%80.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E5%88%9B%E5%BB%BA%E6%96%87%E4%BB%B6%E5%A4%B9.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E6%8F%92%E4%BB%B6%E6%96%87%E4%BB%B6%E5%A4%B9.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E5%88%9B%E5%BB%BA%E6%96%B0%E7%9A%84%E4%BB%A4%E7%89%8C.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E7%94%9F%E6%88%90%E4%BB%A4%E7%89%8C.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E8%8E%B7%E5%8F%96%E7%9A%84%E4%BB%A4%E7%89%8C.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E7%AE%A1%E7%90%86%E9%9B%86%E6%88%90.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E6%B7%BB%E5%8A%A0%E9%9B%86%E6%88%90.jpg">
+<meta property="og:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E6%90%9C%E7%B4%A2%E9%9B%86%E6%88%90.jpg">
+<meta property="article:published_time" content="2021-09-01T10:24:34.000Z">
+<meta property="article:modified_time" content="2021-09-01T10:39:07.782Z">
+<meta property="article:author" content="超级有节操的逆袭">
+<meta property="article:tag" content="智能家居">
+<meta property="article:tag" content="Homeassistant">
+<meta property="article:tag" content="TrueNAS">
+<meta property="article:tag" content="从零开始搭建你的智能家居平台">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/web%E7%AB%AF%E9%A6%96%E9%A1%B5.png">
+
+<link rel="canonical" href="https://blog.kcm-nixi.cn/2021/09/01/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>从零开始搭建你的智能家居平台(一) | KCM-NIXI's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8b42461a9400c8e94260e22af4c24718";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">KCM-NIXI's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.kcm-nixi.cn/2021/09/01/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+      <meta itemprop="name" content="超级有节操的逆袭">
+      <meta itemprop="description" content="随便写些有的没得,主要是给将来的我看的,别太指望了">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="KCM-NIXI's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          从零开始搭建你的智能家居平台(一)
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-09-01 18:24:34 / 修改时间：18:39:07" itemprop="dateCreated datePublished" datetime="2021-09-01T18:24:34+08:00">2021-09-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF%E6%96%B9%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">技术方法</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2021/09/01/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/" class="post-meta-item leancloud_visitors" data-flag-title="从零开始搭建你的智能家居平台(一)" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/09/01/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/09/01/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="从零开始搭建你的智能家居平台"><a href="#从零开始搭建你的智能家居平台" class="headerlink" title="从零开始搭建你的智能家居平台"></a>从零开始搭建你的智能家居平台</h1><blockquote>
+<p>Written by 超级有节操的逆袭    </p>
+</blockquote>
+<p>在本文中,将会详细的介绍什么是Homeassistant以及如何搭建你自己的智能家居平台    </p>
+<p>还是如同之前一样,我们先直接展示下智能家居平台搭建完成以后的效果    </p>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/web%E7%AB%AF%E9%A6%96%E9%A1%B5.png" alt="webIndex">    </p>
+<blockquote>
+<p>web端首页</p>
+</blockquote>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/app%E9%A6%96%E9%A1%B5.jpg" alt="app1"></p>
+<blockquote>
+<p>App首页</p>
+</blockquote>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/app%E7%81%AF%E6%8E%A7.jpg" alt="app2"></p>
+<blockquote>
+<p>App灯控</p>
+</blockquote>
+<h2 id="一些前置的基础知识"><a href="#一些前置的基础知识" class="headerlink" title="一些前置的基础知识"></a>一些前置的基础知识</h2><h3 id="常见的智能家居物联网通讯协议"><a href="#常见的智能家居物联网通讯协议" class="headerlink" title="常见的智能家居物联网通讯协议"></a>常见的智能家居物联网通讯协议</h3><p>从目前市面上的产品来看,最常见的物联网通讯协议有三种,分别为</p>
+<ul>
+<li>WiFi</li>
+<li>蓝牙Mesh</li>
+<li>Zigbee</li>
+</ul>
+<p>除去常见的这三种协议外,还有一个不太常见的协议</p>
+<ul>
+<li>Z-Wave</li>
+</ul>
+<p>在本文中,主要介绍常见的这三种协议.接下来分别介绍下这三种协议的区别和优劣</p>
+<h4 id="WiFi协议"><a href="#WiFi协议" class="headerlink" title="WiFi协议"></a>WiFi协议</h4><p>该协议主要会用在一些长期通电的设备上,例如智能窗帘电机,智能开关等设备,该协议相比另外的两个协议会更加耗电.但是受益于WiFi设备的大规模生产,使用WiFi协议的智能设备会比同等级的其他协议的设备更加便宜.WiFi协议的智能家居设备一般而言总是使用的2.4G频段WiFi,不支持5G频段,如果你的路由器设置了双频合一有可能会导致智能设备无法连接到你的路由器,发生这种情况你需要将2.4G频段和5G频段分离,分别进行命名,或者将你的智能设备换成更好一些的.<del>我的建议是直接换设备,不然你分离的话手机使用WiFi会更麻烦,特别是如果你使用了高端的802.11AX协议路由器的时候</del></p>
+<h4 id="蓝牙Mesh协议"><a href="#蓝牙Mesh协议" class="headerlink" title="蓝牙Mesh协议"></a>蓝牙Mesh协议</h4><p>蓝牙协议一般会使用在一些由电池供电的设备,例如电子温湿度计等,该协议耗电量在三个协议中为中等比Zigbee略高一点点,明显低于WiFi,价格上也比较适中,但是在特殊情况下有明显的缺点.蓝牙Mesh协议使用的频段同样是2.4G频段,工作在2402MHz-2480MHz频段之间,相较于WiFi的2400MHz-24835MHz带宽更窄.蓝牙定义了40个信道,每个信道带宽2Mhz,而WiFi2.4单一信道带宽20MHz,数据传输速率明显低于WiFi,这导致了如果说你在家中部署了大量蓝牙Mesh协议的智能设备,会导致你家中的电磁环境变得复杂.尤其是长期通电的蓝牙Mesh开关.由于他们的节点特性会保持一个较高频率的轮询.这将最终导致你家中的其他一些蓝牙设备可能会工作不正常.尤其是蓝牙音箱.笔者本人家中的电脑就使用了一台小米的回音壁作为电脑音箱,在笔者给家里的开关完全换成蓝牙Mesh开关后,该音箱使用变得明显不正常,声音会一卡一卡的,最终将其换成TosLink有线连接后该问题才得到解决.</p>
+<p>除此之外,蓝牙Mesh协议的智能家居设备还有一些意料之外的坑点.在蓝牙Mesh协议中,蓝牙设备的节点可以附加上四个不同的特性,分别为</p>
+<ul>
+<li>Proxy feature(代理节点)</li>
+<li>Relay feature(中继节点)</li>
+<li>Low power feature(低功耗节点)</li>
+<li>Friend feature(友谊节点)</li>
+</ul>
+<p>  <img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E8%93%9D%E7%89%99Mesh.jpg" alt="蓝牙mesh"></p>
+<p>代理节点你可以理解为整个蓝牙Mesh网络的对外门户,如果你想要使用手机访问控制这个蓝牙Mesh网络中的设备,你得手机就需要连接上这个代理节点,向该节点传输信息.该节点收到信息后,会通过网络泛洪的形式将手机发来的控制信息传递到整个蓝牙Mesh网络的每一个节点上.这一特性决定了蓝牙Mesh协议的设备可以部署在一个很大的空间中还依然能够保证节点之间的数据互通.</p>
+<p>中继节点就如同它的名字一样,可以负责数据的中继,只要收到的数据TTL大于1并且该数据不再自身缓存中,该节点就会把收到的所有数据发送至与它相连的所有节点中去.</p>
+<p>低功耗节点和友谊节点是一组特殊的节点,由于低功耗节点的设备一般都是由电池供电的功率敏感设别,所以该类型的节点会经常性的休眠以降低功耗,而在休眠期间,发送过来的控制指令将无法被该节点接收到并作出反应,这个时候信息就会被缓存在与该节点进行了配对的友谊节点中.待低功耗节点休眠完毕后再获取到缓存的指令.</p>
+<p>从这个协议的原理上来说,你只需要一个Proxy设备,即可利用蓝牙Mesh的自组网搭建出一个蓝牙Mesh网络,但是,很不幸,就我目前的查询结果上来看,市售的号称自己是蓝牙Mesh协议的智能开关似乎无法达成中继,这样就意味着如果你家里比较大,必须要同时购入多个蓝牙网关,才能再你家中搭建起一个蓝牙Mesh网络.这一点需要读者注意.</p>
+<h4 id="Zigbee协议"><a href="#Zigbee协议" class="headerlink" title="Zigbee协议"></a>Zigbee协议</h4><p>Zigbee也叫做紫蜂,是一个专门为了物联网而开发的专有协议.其功耗在三种协议里面最低,但由于产量和使用场景的原因同等级价格最高.zigbee支持多种不同的组网方式.与蓝牙Mesh一样,同样需要一个网关设备来构建整个Zigbee网络.理论上也能进行自组网.但是由于本人手中的zigbee设备仅有一些低功耗的传感器,所以不能确定市售的Zigbee设备是否能够正确的进行自组网操作.</p>
+<h3 id="关于智能开关的一些基础"><a href="#关于智能开关的一些基础" class="headerlink" title="关于智能开关的一些基础"></a>关于智能开关的一些基础</h3><p>市售的智能开关除去协议的区别外有两种,分别为 <strong>单火</strong> 开关与 <strong>零火</strong> 开关.他们的区别在于智能开关上是否需要单独接一条零线.由于智能开关不像普通的开关只控制通断,它是一个耗电设备,所以对其还需要进行供电.对于老房子而言,一般来说不太可能会在开关盒内另外单独有一条零线,所以如果是老房子升级智能化设备,你只能使用单火开关.</p>
+<p>使用单火开关你需要在你灯的零线与火线之间安装一个消闪器,与灯并联,否则你的灯在使用过程中会闪烁,非常晃眼.</p>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E5%8D%95%E7%81%AB%E5%BC%80%E5%85%B3%E6%8E%A5%E7%BA%BF.jpg" alt="单火"></p>
+<p>如果你的房子是新装修,那么你可以在装修的时候直接给所有的开关盒额外安装一条零线,这样就可以使用零火开关.零火开关的好处就是不需要再在灯上额外安装消闪器,并且同样的开关零火版比单火版更便宜一些.</p>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E9%9B%B6%E7%81%AB%E6%8E%A5%E7%BA%BF.jpg" alt="零火"></p>
+<h3 id="Homeassistant简介"><a href="#Homeassistant简介" class="headerlink" title="Homeassistant简介"></a>Homeassistant简介</h3><p>Homeassistant是一款用于家庭自动化的免费开源软件,使用python语言编写,其最大的特点是本地控制以及部署,能最大限度的保证你的隐私安全.当然,在我看来更大的好处是可以让不同协议,不同平台,甚至是不同厂商之间的设备能顺利的进行互联互通,通过一个中央服务统一调度你家中的所有智能家居设备.如果你手中有米家,苹果,微易联,飞利浦等不同厂商的设备,都可以接入至Homeassistant,你对智能家居设备的选择就不会局限在某一个特定厂商或是特定平台,将选择权完全还给你.</p>
+<p><a target="_blank" rel="noopener" href="https://www.home-assistant.io/">Homeassistant官网</a></p>
+<h2 id="搭建你的Homeassistant"><a href="#搭建你的Homeassistant" class="headerlink" title="搭建你的Homeassistant"></a>搭建你的Homeassistant</h2><p>homeassistant的部署方式有很多种,例如部署在NAS,虚拟机,树莓派里等,你完全可以按照你的具体情况来选择最适宜你的部署方式.笔者在下面介绍下几种不同的部署方式,供读者参考.</p>
+<h3 id="不同版本的Homeassistant的区别"><a href="#不同版本的Homeassistant的区别" class="headerlink" title="不同版本的Homeassistant的区别"></a>不同版本的Homeassistant的区别</h3><p>Homeassistant有一个独立的操作系统Hassio和仅包含核心软件包的发行版homeassistant core,二者的差别并不大,都能实现同样的功能.不过区别在于有一些必备的常用组件如<a target="_blank" rel="noopener" href="https://hacs.xyz/">HACS</a>,再hassio系统中这个组件是默认安装的,而在homeassistant core中并不包含该组件,你需要手动安装HACS组件并在yaml中进行相应的配置.相较而言,安装Hassio操作系统更加开箱即用一些.不过这是个教程,那么还是来讲讲更复杂的一些的homeassistant core如何玩转它吧.</p>
+<h3 id="使用容器部署Homeassistant"><a href="#使用容器部署Homeassistant" class="headerlink" title="使用容器部署Homeassistant"></a>使用容器部署Homeassistant</h3><p>笔者家中有一台TrueNAS core系统的NAS,在truenas中非常容易安装.</p>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/truenas%E5%AE%89%E8%A3%85ha.jpg" alt="truenas下安装"></p>
+<p>选择<code>Plugins</code>,然后选择<code>Community</code>,找到Home Assistant Core后再点击<code>安装</code>即可完成安装.你可以手动指定该容器的IP抑或是直接使用DHCP自动分配IP地址,从将来维护的方便的角度上来说,我建议在这里使用DHCP分配IP,然后再路由器上固定IP地址.</p>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E8%B7%AF%E7%94%B1%E5%99%A8%E5%88%86%E9%85%8D.jpg" alt="路由器"></p>
+<p>如果你安装的是Unraid系统的NAS,也可以使用Docker的形式安装Homeassistant,操作方式类似.</p>
+<p>笔者推荐使用这种方法安装,因为你有大量别人已经配置好的镜像可以选择,不需要自己手动配置.</p>
+<h3 id="使用Python虚拟环境安装Homeassistant"><a href="#使用Python虚拟环境安装Homeassistant" class="headerlink" title="使用Python虚拟环境安装Homeassistant"></a>使用Python虚拟环境安装Homeassistant</h3><p>如果你的计算机本身性能不足,或是没有安装docker等容器的经验的话,也可以考虑直接使用python虚拟环境来运行homeassistant.</p>
+<h4 id="安装依赖"><a href="#安装依赖" class="headerlink" title="安装依赖"></a>安装依赖</h4><p>homeassistant软件依赖python3.8+,所以在安装homeassistant之前你需要在你的服务器上安装python环境.不同的linux发行版所使用的包管理器不尽相同,所以你需要使用对应的包管理器进行python等依赖的安装.以笔者最常用的CentOS为例安装的语句如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#更新yum</span><br><span class="line">sudo yum update -y</span><br><span class="line">#安装homeassistant所需的所有依赖</span><br><span class="line">sudo yum install -y python3 python3-dev python3-venv python3-pip libffi-dev libssl-dev libjpeg-dev zlib1g-dev autoconf build-essential libopenjp2-7 libtiff5 tzdata</span><br></pre></td></tr></table></figure>
+<h4 id="创建账户"><a href="#创建账户" class="headerlink" title="创建账户"></a>创建账户</h4><p>为homeassistant core创建一个用户,供其使用</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo useradd -rm homeassistant -G dialout,gpio,i2c</span><br></pre></td></tr></table></figure>
+
+<h4 id="创建虚拟环境"><a href="#创建虚拟环境" class="headerlink" title="创建虚拟环境"></a>创建虚拟环境</h4><p>首先先创建一个目录用于安装Homeassistant,然后把这个文件夹的所有者赋予给刚刚创建出的<code>homeassistant</code>用户</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo mkdir /srv/homeassistant</span><br><span class="line">sudo chown homeassistant:homeassistant /srv/homeassistant</span><br></pre></td></tr></table></figure>
+
+<p>接下来开始为homeassistant创建虚拟环境</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo -u homeassistant -H -s</span><br><span class="line">cd /srv/homeassistant</span><br><span class="line">python3 -m venv .</span><br><span class="line">source bin/activate</span><br></pre></td></tr></table></figure>
+
+<p>输入以上指令后将会创建出虚拟环境,在你的终端上会显示为<code>(homeassistant)homeassistant@root:/srv/homeassistant $</code>(ps:这里我假设你是使用root账户登录的)</p>
+<h4 id="安装python依赖"><a href="#安装python依赖" class="headerlink" title="安装python依赖"></a>安装python依赖</h4><p>接下来安装pip包</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#更换pip源为阿里源,国内使用国外的源下载速度会非常慢,所以需要切换数据源,如果你已经切换了那么下面这一句可以不用写</span><br><span class="line">pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/</span><br><span class="line"></span><br><span class="line">python3 -m pip install wheel</span><br></pre></td></tr></table></figure>
+
+<p>安装完毕以后就可以通过pip来安装homeassistant了,输入</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip3 install homeassistant</span><br></pre></td></tr></table></figure>
+
+<p>等待完成安装,如果一切顺利的话你接下来就可以启动你下好的homeassistant了!在你第一次启动homeassistant的时候由于要下载大量的依赖所以启动会非常慢,大约需要五到十分钟甚至更久,泡一杯咖啡慢慢等吧</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hass</span><br></pre></td></tr></table></figure>
+
+<p>等待上面的命令执行完成,执行完成后,访问<code>http://你的服务器ip:8123</code>,你就能访问到homeassistant的web页面了.</p>
+<h3 id="安装HACS组件"><a href="#安装HACS组件" class="headerlink" title="安装HACS组件"></a>安装HACS组件</h3><p>HACS(Home Assistant Community Store)是homeassistant中一个非常重要的组件,这个组件负责管理整个Homeassistant的外部下载组件.</p>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/HACS.jpg" alt="HACS"></p>
+<p>通过该组件可以直接下载发布在Github上的社区组件或是一些漂亮的卡片.但该组件并不包含在Homeassistant Core中,需要你手动进行安装.</p>
+<h4 id="下载HACS"><a href="#下载HACS" class="headerlink" title="下载HACS"></a>下载HACS</h4><p>先去github的hacs仓库下载最新的发新版,<a target="_blank" rel="noopener" href="https://github.com/hacs/integration/releases">仓库地址</a></p>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E4%BB%93%E5%BA%93%E5%9C%B0%E5%9D%80.jpg" alt="发行版"></p>
+<p>下载该文件,然后访问你的Homeassistant服务器,进入你的homeassistant安装目录</p>
+<p>例如,笔者的homeassistant的安装目录为<code>/home/homeassistant/homeassistant/</code>,在该文件夹下创建两个新的文件夹,分别为<code>custom_components</code>以及<code>www</code>,然后把你刚刚所下载的HACS文件放入custom_components文件夹中.如果你找不到你的安装目录的话,你可以使用<code>find</code>命令来搜索.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">root@homeassistant:~ # find / -name &quot;homeassistant&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E5%88%9B%E5%BB%BA%E6%96%87%E4%BB%B6%E5%A4%B9.jpg" alt="创建文件夹"></p>
+<blockquote>
+<p>创建文件夹</p>
+</blockquote>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E6%8F%92%E4%BB%B6%E6%96%87%E4%BB%B6%E5%A4%B9.jpg" alt="插件文件夹"></p>
+<blockquote>
+<p>放入解压后的下载文件</p>
+</blockquote>
+<h4 id="获取Github-Token"><a href="#获取Github-Token" class="headerlink" title="获取Github Token"></a>获取Github Token</h4><p>HACS需要通过Github来下载安装组件,所以需要一个Github的访问令牌.这里默认你已经注册了Github账号.</p>
+<p>首先在网页上登录<a target="_blank" rel="noopener" href="https://github.com/">Github</a>,然后访问<a target="_blank" rel="noopener" href="https://github.com/settings/tokens">令牌管理地址</a>.在这里创建一个新的令牌.</p>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E5%88%9B%E5%BB%BA%E6%96%B0%E7%9A%84%E4%BB%A4%E7%89%8C.jpg" alt="创建令牌"></p>
+<p>在这个页面中,填入这个token的说明并且将这个令牌的有效时间设置为不会过期,底下的选项一个都不用勾上.直接拉到页面的最下面确认生成.</p>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E7%94%9F%E6%88%90%E4%BB%A4%E7%89%8C.jpg" alt="生成令牌"></p>
+<p>生成令牌后你 <strong>只能看到它一次</strong> ,请在这个时候务必复制保存该令牌!</p>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E8%8E%B7%E5%8F%96%E7%9A%84%E4%BB%A4%E7%89%8C.jpg" alt="获取的令牌"></p>
+<h4 id="在homeassistant中配置HACS"><a href="#在homeassistant中配置HACS" class="headerlink" title="在homeassistant中配置HACS"></a>在homeassistant中配置HACS</h4><p>访问你的Homeassistant首页,点击<code>配置</code>→<code>集成</code></p>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E7%AE%A1%E7%90%86%E9%9B%86%E6%88%90.jpg" alt="管理集成"></p>
+<p>之后点击添加集成</p>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E6%B7%BB%E5%8A%A0%E9%9B%86%E6%88%90.jpg" alt="添加集成"></p>
+<p>在上面的搜索框中输入h,下面就会搜索到HACS,点击安装.在安装完毕之后会弹出一个输入框,要求你输入Github的令牌,你把刚刚获取到的令牌填入其中.最后,重启一次你的Homeassistant,这样你的HACS集成就安装完毕了!</p>
+<p><img src="https://kamiro.oss-cn-shanghai.aliyuncs.com/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/%E6%90%9C%E7%B4%A2%E9%9B%86%E6%88%90.jpg" alt="搜索集成"></p>
+<p>这篇就先到这儿吧,下一篇我来讲讲怎么把米家给捯饬进Hass里去</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85/" rel="tag"># 智能家居</a>
+              <a href="/tags/Homeassistant/" rel="tag"># Homeassistant</a>
+              <a href="/tags/TrueNAS/" rel="tag"># TrueNAS</a>
+              <a href="/tags/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/" rel="tag"># 从零开始搭建你的智能家居平台</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/09/01/%E4%BD%A0%E6%98%AF%E5%90%A6%E6%9C%89%E5%BF%85%E8%A6%81%E6%8A%98%E8%85%BE%E4%B8%80%E5%A5%97%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85/" rel="prev" title="你是否有必要折腾一套智能家居?">
+      <i class="fa fa-chevron-left"></i> 你是否有必要折腾一套智能家居?
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0"><span class="nav-number">1.</span> <span class="nav-text">从零开始搭建你的智能家居平台</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%BA%9B%E5%89%8D%E7%BD%AE%E7%9A%84%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86"><span class="nav-number">1.1.</span> <span class="nav-text">一些前置的基础知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E7%89%A9%E8%81%94%E7%BD%91%E9%80%9A%E8%AE%AF%E5%8D%8F%E8%AE%AE"><span class="nav-number">1.1.1.</span> <span class="nav-text">常见的智能家居物联网通讯协议</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#WiFi%E5%8D%8F%E8%AE%AE"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">WiFi协议</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%93%9D%E7%89%99Mesh%E5%8D%8F%E8%AE%AE"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">蓝牙Mesh协议</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Zigbee%E5%8D%8F%E8%AE%AE"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">Zigbee协议</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E6%99%BA%E8%83%BD%E5%BC%80%E5%85%B3%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E7%A1%80"><span class="nav-number">1.1.2.</span> <span class="nav-text">关于智能开关的一些基础</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Homeassistant%E7%AE%80%E4%BB%8B"><span class="nav-number">1.1.3.</span> <span class="nav-text">Homeassistant简介</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84Homeassistant"><span class="nav-number">1.2.</span> <span class="nav-text">搭建你的Homeassistant</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8D%E5%90%8C%E7%89%88%E6%9C%AC%E7%9A%84Homeassistant%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.2.1.</span> <span class="nav-text">不同版本的Homeassistant的区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%AE%B9%E5%99%A8%E9%83%A8%E7%BD%B2Homeassistant"><span class="nav-number">1.2.2.</span> <span class="nav-text">使用容器部署Homeassistant</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8Python%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83%E5%AE%89%E8%A3%85Homeassistant"><span class="nav-number">1.2.3.</span> <span class="nav-text">使用Python虚拟环境安装Homeassistant</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">安装依赖</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E8%B4%A6%E6%88%B7"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">创建账户</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E8%99%9A%E6%8B%9F%E7%8E%AF%E5%A2%83"><span class="nav-number">1.2.3.3.</span> <span class="nav-text">创建虚拟环境</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85python%E4%BE%9D%E8%B5%96"><span class="nav-number">1.2.3.4.</span> <span class="nav-text">安装python依赖</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85HACS%E7%BB%84%E4%BB%B6"><span class="nav-number">1.2.4.</span> <span class="nav-text">安装HACS组件</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BDHACS"><span class="nav-number">1.2.4.1.</span> <span class="nav-text">下载HACS</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96Github-Token"><span class="nav-number">1.2.4.2.</span> <span class="nav-text">获取Github Token</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%A8homeassistant%E4%B8%AD%E9%85%8D%E7%BD%AEHACS"><span class="nav-number">1.2.4.3.</span> <span class="nav-text">在homeassistant中配置HACS</span></a></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="超级有节操的逆袭"
+      src="/uploads/avatar.jpg">
+  <p class="site-author-name" itemprop="name">超级有节操的逆袭</p>
+  <div class="site-description" itemprop="description">随便写些有的没得,主要是给将来的我看的,别太指望了</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">超级有节操的逆袭</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'zWVHiArCa20gFHLYt0uJXUau-gzGzoHsz',
+      appKey     : 'SLdIJkEQ6gS20lq3atQE2Sfz',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

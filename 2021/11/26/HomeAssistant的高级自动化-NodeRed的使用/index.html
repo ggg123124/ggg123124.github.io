@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.kcm-nixi.cn","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"algolia":{"appID":"I6ZXULRUK2","apiKey":"011921127afa23cc420635a060495b70","indexName":"kcm-nixi's blog","hits":{"per_page":10},"labels":{"input_placeholder":"输入你的查询内容","hits_empty":"没有找到你所查询的内容 : ${query}","hits_stats":"找到${hits}条数据"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="在最初折腾智能家居的时候我就发现了一个很麻烦的事儿,在我接触过的所有智能家居平台,不论是米家还是涂鸦或者HomeKit,甚至是HomeAssistant它自身,自动化就没一个好用的.要么是功能实在是太过简单,没有办法实现非常复杂的设备联动(点名批评除了HomeAssistant的所有控制平台).要么就是语法究极复杂而且不直观,一个自动化要编写调试很久(点名批评HomeAssistant,用YMAL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HomeAssistant的高级自动化---NodeRed的使用">
+<meta property="og:url" content="https://blog.kcm-nixi.cn/2021/11/26/HomeAssistant%E7%9A%84%E9%AB%98%E7%BA%A7%E8%87%AA%E5%8A%A8%E5%8C%96-NodeRed%E7%9A%84%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="KCM-NIXI&#39;s Blog">
+<meta property="og:description" content="在最初折腾智能家居的时候我就发现了一个很麻烦的事儿,在我接触过的所有智能家居平台,不论是米家还是涂鸦或者HomeKit,甚至是HomeAssistant它自身,自动化就没一个好用的.要么是功能实在是太过简单,没有办法实现非常复杂的设备联动(点名批评除了HomeAssistant的所有控制平台).要么就是语法究极复杂而且不直观,一个自动化要编写调试很久(点名批评HomeAssistant,用YMAL">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1553738&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/hass%E8%87%AA%E5%8A%A8%E5%8C%96.jpg&x=1366&y=768&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1553777&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E7%B1%B3%E5%AE%B6%E8%87%AA%E5%8A%A8%E5%8C%96.jpg&x=1366&y=768&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1553939&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/nodered%E7%9A%84%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%A4%BA%E4%BE%8B.jpg&x=1366&y=768&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554311&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/hass%E8%8A%82%E7%82%B91.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554364&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/hass2.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554563&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/nodered%E7%BB%84%E4%BB%B6.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554427&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E7%95%8C%E9%9D%A2.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554383&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/inject%E8%8A%82%E7%82%B9.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554396&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/inject2.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554416&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/inject%E8%8C%83%E4%BE%8B.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554407&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/debug.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554439&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E6%89%93%E5%8D%B0%E6%97%B6%E9%97%B4%E6%88%B3.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554451&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/delay.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554462&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/delay%E6%BC%94%E7%A4%BA.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554475&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/function.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554488&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/function%E4%BE%8B%E5%AD%90.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554512&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E5%88%9B%E5%BB%BA%E4%BB%A4%E7%89%8C.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554522&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E9%85%8D%E7%BD%AE.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554523&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E9%85%8D%E7%BD%AE2.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554502&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/current%20state.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554543&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E5%8D%AB%E7%94%9F%E9%97%B4%E7%81%AF.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554547&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E5%8D%AB%E7%94%9F%E9%97%B4%E7%81%AF%E7%8A%B6%E6%80%81.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554576&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/eventsstate.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554585&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E6%9C%AC%E6%9C%88%E7%94%B5%E8%B4%B9.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554595&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/entity.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554585&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E6%9C%AC%E6%9C%88%E7%94%B5%E8%B4%B9.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554604&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E6%9C%AC%E6%9C%88%E7%94%B5%E8%B4%B92.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554605&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E6%9C%AC%E6%9C%88%E7%94%B5%E8%B4%B93.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554621&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E4%B8%80%E9%94%AE%E6%8B%89%E9%97%B8%E5%BC%80%E5%85%B3.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554622&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E4%B8%80%E9%94%AE%E6%8B%89%E9%97%B8%E6%B5%81%E7%A8%8B.jpg&x=2560&y=1080&a=true">
+<meta property="og:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554624&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E4%B8%80%E9%94%AE%E6%8B%89%E9%97%B82.jpg&x=2560&y=1080&a=true">
+<meta property="article:published_time" content="2021-11-26T01:52:55.000Z">
+<meta property="article:modified_time" content="2021-11-29T15:14:45.717Z">
+<meta property="article:author" content="超级有节操的逆袭">
+<meta property="article:tag" content="智能家居">
+<meta property="article:tag" content="Homeassistant">
+<meta property="article:tag" content="从零开始搭建你的智能家居平台">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1553738&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/hass%E8%87%AA%E5%8A%A8%E5%8C%96.jpg&x=1366&y=768&a=true">
+
+<link rel="canonical" href="https://blog.kcm-nixi.cn/2021/11/26/HomeAssistant%E7%9A%84%E9%AB%98%E7%BA%A7%E8%87%AA%E5%8A%A8%E5%8C%96-NodeRed%E7%9A%84%E4%BD%BF%E7%94%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>HomeAssistant的高级自动化---NodeRed的使用 | KCM-NIXI's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?8b42461a9400c8e94260e22af4c24718";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">KCM-NIXI's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.kcm-nixi.cn/2021/11/26/HomeAssistant%E7%9A%84%E9%AB%98%E7%BA%A7%E8%87%AA%E5%8A%A8%E5%8C%96-NodeRed%E7%9A%84%E4%BD%BF%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+      <meta itemprop="name" content="超级有节操的逆袭">
+      <meta itemprop="description" content="随便写些有的没得,主要是给将来的我看的,别太指望了">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="KCM-NIXI's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          HomeAssistant的高级自动化---NodeRed的使用
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-11-26 09:52:55" itemprop="dateCreated datePublished" datetime="2021-11-26T09:52:55+08:00">2021-11-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-11-29 23:14:45" itemprop="dateModified" datetime="2021-11-29T23:14:45+08:00">2021-11-29</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF%E6%96%B9%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">技术方法</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2021/11/26/HomeAssistant%E7%9A%84%E9%AB%98%E7%BA%A7%E8%87%AA%E5%8A%A8%E5%8C%96-NodeRed%E7%9A%84%E4%BD%BF%E7%94%A8/" class="post-meta-item leancloud_visitors" data-flag-title="HomeAssistant的高级自动化---NodeRed的使用" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/11/26/HomeAssistant%E7%9A%84%E9%AB%98%E7%BA%A7%E8%87%AA%E5%8A%A8%E5%8C%96-NodeRed%E7%9A%84%E4%BD%BF%E7%94%A8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/11/26/HomeAssistant%E7%9A%84%E9%AB%98%E7%BA%A7%E8%87%AA%E5%8A%A8%E5%8C%96-NodeRed%E7%9A%84%E4%BD%BF%E7%94%A8/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在最初折腾智能家居的时候我就发现了一个很麻烦的事儿,在我接触过的所有智能家居平台,不论是米家还是涂鸦或者HomeKit,甚至是HomeAssistant它自身,自动化就没一个好用的.要么是功能实在是太过简单,没有办法实现非常复杂的设备联动(点名批评除了HomeAssistant的所有控制平台).要么就是语法究极复杂而且不直观,一个自动化要编写调试很久(点名批评HomeAssistant,用YMAL来编写自动化这是啥原理我到现在都没搞明白).言而总之总而言之,没一个好用的,都是坑比玩意儿.</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1553738&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/hass%E8%87%AA%E5%8A%A8%E5%8C%96.jpg&x=1366&y=768&a=true" alt="谁寄吧看的懂啊"></p>
+<blockquote>
+<p>谁寄吧看得懂啊!</p>
+</blockquote>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1553777&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E7%B1%B3%E5%AE%B6%E8%87%AA%E5%8A%A8%E5%8C%96.jpg&x=1366&y=768&a=true" alt="就这?"></p>
+<blockquote>
+<p>米家自动化,就这?</p>
+</blockquote>
+<p>既然都那么拉跨,那么有没有一种能够方便编写功能还强可阅读性还高的搞定自动化的办法嘞?</p>
+<p>当然有啦!那就是来自<del>曾经的</del>蓝色巨人IBM的开源项目——<a target="_blank" rel="noopener" href="https://nodered.org/">Node-Red</a></p>
+<h1 id="来点基础芝士"><a href="#来点基础芝士" class="headerlink" title="来点基础芝士"></a>来点基础芝士</h1><p>Node-Red是IBM于2013年创建的开源项目,运行于Node.js上,用于硬件设备和其他服务的快速连接,比如说快速将某些特定的硬件传感器数据丢到你自个儿写的java程序里去.由于该项目社区的扩大以及活跃,有大量的好哥哥为其编写了各种各样的组件,很多时候你都不需要去自己编写代码,用其他好哥哥给你提供好的节点拖一拖就完事儿了.你的精力可以完全集中在你业务功能的实现上.我用了一次之后立刻抛弃了HomeAssistant它自己那麻烦的自动化.</p>
+<p>我们先来看一个简单的示例来了解下node-red可以做到什么程度,下面这个图就是node-red的web管理界面,逻辑的实现是依靠拖动指令块来实现的.图上的指令块实现了一个简单的功能.当我和我女朋友离开家的时候自动把家里全部的灯光都关闭.</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1553939&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/nodered%E7%9A%84%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%A4%BA%E4%BE%8B.jpg&x=1366&y=768&a=true" alt="自动关灯"></p>
+<p>在这个流程图中,包含了最基础的数据输入,逻辑判断,设备控制指令输出等基本操作.基本上我就是把这些指令块拖一拖线连一连就实现了该功能.回想下hass的自动化编写,是不是难度低了几个量级.</p>
+<h1 id="如何安装"><a href="#如何安装" class="headerlink" title="如何安装"></a>如何安装</h1><p>最简单的安装方式还是通过容器的形式进行安装,我是TrueNAS,所以直接插件里面安装node-red就完事儿了,其他的话用docker安装是最简单的.如果你还不知道啥是容器的话强烈建议你去看看docker.如果你受制于某些特定条件无法使用容器安装的话你也可以参考node-red官网上的安装方式,比如<a target="_blank" rel="noopener" href="https://nodered.org/docs/getting-started/raspberrypi">这篇</a>如何在树莓派上安装的文.本文就不再额外赘述咋安装了,这要写起来可太麻烦了而且有很多现成的东西.</p>
+<h1 id="安装HomeAssistant节点"><a href="#安装HomeAssistant节点" class="headerlink" title="安装HomeAssistant节点"></a>安装HomeAssistant节点</h1><p>安装node-red完成之后访问node-red的web管理界面,而后点击右上角,选择节点管理.</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554311&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/hass%E8%8A%82%E7%82%B91.jpg&x=2560&y=1080&a=true" alt="节点管理"></p>
+<p>点击上面的安装选项卡,然后再搜索栏中输入<code>node-red-contrib-home-assistant-websocket</code>,而后你就能找到homeassistant的节点,点击安装后其节点就被添加进了你的node-red服务中.我这里是已经安装好了所以显示的是已安装.</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554364&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/hass2.jpg&x=2560&y=1080&a=true" alt="节点安装"></p>
+<h1 id="HomeAssistant安装Node-Red集成"><a href="#HomeAssistant安装Node-Red集成" class="headerlink" title="HomeAssistant安装Node-Red集成"></a>HomeAssistant安装Node-Red集成</h1><p>这个集成好装,直接打开集成界面,点击右下角的添加集成按钮,搜索node-red,点击安装后填入你node-red的host等信息就轻松搞定</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554563&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/nodered%E7%BB%84%E4%BB%B6.jpg&x=2560&y=1080&a=true" alt="集成安装"></p>
+<h1 id="快速入门"><a href="#快速入门" class="headerlink" title="快速入门"></a>快速入门</h1><p>首先先来讲讲基础操作罢.</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554427&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E7%95%8C%E9%9D%A2.jpg&x=2560&y=1080&a=true" alt="界面"></p>
+<p>整个node-red web gui大致分为三大块,如图所示,红框中的内容是你可以使用的节点,黑框中的部分是你流程的工作界面,右侧会有一些信息还有debug界面.</p>
+<p>把左侧的节点拖入工作空间中,把多个节点用线段连接起来,这样你就得到了一个流程.编辑完你的流程之后你还需要点击右上角的<code>部署</code>按钮,这样你的流程才会开始工作.在工作空间中双击节点你可以对该节点进行详细的配置.</p>
+<p>接下来来认识下我们最最最经常会用的节点罢,90%以上的功能只需要用到这些节点.</p>
+<h1 id="inject节点"><a href="#inject节点" class="headerlink" title="inject节点"></a>inject节点</h1><p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554383&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/inject%E8%8A%82%E7%82%B9.jpg&x=2560&y=1080&a=true" alt="inject"></p>
+<p>如图所示,该节点是一个触发节点,可以通过该节点的触发来启动后面的一系列处理流程.这个节点你可以在web gui中手动点击触发也可以设置定时触发or指定时间段定时触发or指定时间触发.默认的情况下它会在出发时在<code>msg.payload</code>中写入触发时的时间戳,当然你也可以自个儿写一些需要在处理流程中需要的参数来进行整个流程的调试测试.</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554396&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/inject2.jpg&x=2560&y=1080&a=true" alt="inject2"></p>
+<p>以下便是一个范例,我使用inject周期性计算我家的当前能耗数据,每十秒执行一次.</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554416&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/inject%E8%8C%83%E4%BE%8B.jpg&x=2560&y=1080&a=true" alt="inject范例"></p>
+<h1 id="debug节点"><a href="#debug节点" class="headerlink" title="debug节点"></a>debug节点</h1><p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554407&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/debug.jpg&x=2560&y=1080&a=true" alt="debug"></p>
+<p>debug节点可以打印流程中的数据节点,方便你进行调试.比如我把该节点与刚刚的<code>inject</code>节点相连,让它在控制台上打印<code>msg.payload</code>中的内容.</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554439&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E6%89%93%E5%8D%B0%E6%97%B6%E9%97%B4%E6%88%B3.jpg&x=2560&y=1080&a=true" alt="打印时间戳"></p>
+<p>点击时间戳节点左侧的方块按钮,我们能看到由时间戳节点写入到<code>msg.payload</code>信息被打印到了debug界面中.</p>
+<p>通过这个节点我们可以很方便的针对流程中的某一个部分进行调试,这比hass自带的自动化可好调试太多了</p>
+<h1 id="delay节点"><a href="#delay节点" class="headerlink" title="delay节点"></a>delay节点</h1><p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554451&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/delay.jpg&x=2560&y=1080&a=true" alt="delay"></p>
+<p>这个节点可以推迟信息向后的流动,如果你会写代码的话这就相当于一个<code>sleep()</code>函数.</p>
+<p>比如我们可以在刚刚流程的基础上拖一个delay节点出来,并联在刚才写好的流程上.然后我们再触发一次程序,我们可以看到debug界面中打印了两条信息.两条信息的内容是一样的,但是第二条信息的打印时间和第一条信息正好相差了五秒.这正是delay节点在起作用.</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554462&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/delay%E6%BC%94%E7%A4%BA.jpg&x=2560&y=1080&a=true" alt="delay演示"></p>
+<h1 id="function节点"><a href="#function节点" class="headerlink" title="function节点"></a>function节点</h1><p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554475&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/function.jpg&x=2560&y=1080&a=true" alt="function"></p>
+<p>function节点可以让你编写一段js代码来处理你的信息流.如果说你要实现一些复杂的逻辑function节点必不可少.如果你要使用该节点那么有一些你需要知道的基础知识.</p>
+<h2 id="全局变量的保存和使用"><a href="#全局变量的保存和使用" class="headerlink" title="全局变量的保存和使用"></a>全局变量的保存和使用</h2><p>以下便是一个使用全局变量的例子</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554488&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/function%E4%BE%8B%E5%AD%90.jpg&x=2560&y=1080&a=true" alt="function例子"></p>
+<p>function节点1</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">global.set(&quot;sensor.er_lou_dian_biao_3&quot;,msg.payload) //保存一个全局变量名字叫做sensor.er_lou_dian_biao_3,其值为上游节点传入的msg.payload变量的值</span><br><span class="line">return msg; //所有function节点的最后你都需要return msg</span><br></pre></td></tr></table></figure>
+<p>function节点2</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">var yilougonghao = global.get(&quot;sensor.yi_lou_dian_biao_3&quot;)|| 0; //取出sensor.yi_lou_dian_biao_3的值,如果取不到的话就赋值为0</span><br><span class="line">var erlougonghao = global.get(&quot;sensor.er_lou_dian_biao_3&quot;)|| 0; //取出sensor.er_lou_dian_biao_3的值,如果取不到的话就赋值为0</span><br><span class="line">msg.payload = (yilougonghao+erlougonghao).toFixed(3) //二值相加,取小数点后三位,赋值到msg.payload中</span><br><span class="line">return msg;</span><br></pre></td></tr></table></figure>
+<h2 id="引入第三方npm包"><a href="#引入第三方npm包" class="headerlink" title="引入第三方npm包"></a>引入第三方npm包</h2><p>有一些我们常用的js包比如<code>moment</code>之类的东西,我们需要在function节点中使用.首先我们要在服务器上找到node-red的安装目录,例如我的安装目录就是<code>/var/db/nodered/</code>,cd至此目录下执行<code>npm install</code>命令即可安装npm包.</p>
+<p>安装完毕后我们需要在function中使用,最简单的办法就是这样:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">let moment =  global.get(&quot;moment&quot;)</span><br></pre></td></tr></table></figure>
+<p>这样我们就能使用第三方js包了.</p>
+<h1 id="HomeAssistant组件节点"><a href="#HomeAssistant组件节点" class="headerlink" title="HomeAssistant组件节点"></a>HomeAssistant组件节点</h1><p>接下来的节点都是我们刚刚安装好的<code>node-red-contrib-home-assistant-websocket</code>组件中的节点,如果你发现你没有这些节点检查下你安装的对不对,如果你确信你安装了…重启服务试试?</p>
+<h2 id="搞个TOKEN"><a href="#搞个TOKEN" class="headerlink" title="搞个TOKEN"></a>搞个TOKEN</h2><p>在使用homeassistant组件中的节点之前我们需要先去homeassistant中搞一个给node-red用的登陆令牌.</p>
+<p>打开你的homeassistant,点击左下角你的信息,把页面拉到最底下点击创建令牌,随便取个名字后点击确定,这样你就得到了一个长期访问令牌,这个令牌只会出现这一次,你需要把它手动复制下来,一会儿写到node-red里面去</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554512&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E5%88%9B%E5%BB%BA%E4%BB%A4%E7%89%8C.jpg&x=2560&y=1080&a=true" alt="获取令牌"></p>
+<p>回到node-red中,随便拖一个hass的节点出来,双击节点编辑节点属性.点击Server选项右边那个编辑按钮(我这里有是因为我已经编辑好了),在之后弹出的界面中填入名字,你hass的地址还有你刚刚获取到的token.</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554522&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E9%85%8D%E7%BD%AE.jpg&x=2560&y=1080&a=true" alt="配置1"></p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554523&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E9%85%8D%E7%BD%AE2.jpg&x=2560&y=1080&a=true" alt="配置2"></p>
+<blockquote>
+<p>这张图里我勾选了 <code>Accept Unauthorized SSL Certificates</code>,因为我的hass使用了HTTPS,而我这里又是IP访问的,所以我需要勾选该选项跳过证书验证</p>
+</blockquote>
+<p>这样HASS的信息你就配置好了,可以快乐的使用其他节点了.</p>
+<h2 id="current-state节点"><a href="#current-state节点" class="headerlink" title="current state节点"></a>current state节点</h2><p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554502&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/current%20state.jpg&x=2560&y=1080&a=true" alt="获取信息"></p>
+<p>这个节点可以根据hass中的实体ID来获取到对应实体当前的值或者状态,然后把获取到的值放入<code>msg.payload</code>中.该节点不可以作为整个流程的触发节点,必须要有其他能够触发流程的节点触发后该节点才能起效</p>
+<p>我把我家卫生间灯的实体ID填入该节点的配置项中,使用最开始的inject节点触发,并且使用debug节点来打印状态.我们可以看到右侧的控制台中打印了这盏灯的状态.</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554543&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E5%8D%AB%E7%94%9F%E9%97%B4%E7%81%AF.jpg&x=2560&y=1080&a=true" alt="实体"></p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554547&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E5%8D%AB%E7%94%9F%E9%97%B4%E7%81%AF%E7%8A%B6%E6%80%81.jpg&x=2560&y=1080&a=true" alt="状态打印"></p>
+<h2 id="events-state节点"><a href="#events-state节点" class="headerlink" title="events:state节点"></a>events:state节点</h2><p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554576&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/eventsstate.jpg&x=2560&y=1080&a=true" alt="eventsstate"></p>
+<p>这个节点和刚刚的current state节点类似,也是可以根据实体id来获取到对应实体的值,但是不同的是该节点可以作为触发节点,每当实体的值变动的时候都会触发一次流程.假设说你有一个光照传感器,你把该传感器挂载在了该节点上,当传感器的照度信息变化的时候就会触发流程.</p>
+<p>比如说我这个计算电费的流程,当我这个本月能耗的实体值变动的时候就会触发流程计算一次本月当前电费</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554585&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E6%9C%AC%E6%9C%88%E7%94%B5%E8%B4%B9.jpg&x=2560&y=1080&a=true" alt="本月电费"></p>
+<h2 id="entity节点"><a href="#entity节点" class="headerlink" title="entity节点"></a>entity节点</h2><p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554595&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/entity.jpg&x=2560&y=1080&a=true" alt="entity"></p>
+<p>使用该节点你可以在hass中创建出一些实体,用来实现你想要的功能.例如创建出一个开关用于触发某些个流程,或是一个传感器用于显示一些值.以下会举两个例子来进行说明</p>
+<h3 id="传感器例子"><a href="#传感器例子" class="headerlink" title="传感器例子"></a>传感器例子</h3><p>还是我刚刚那个本月电费计算的例子,在计算完本月电费之后我使用一个entity节点把数据写进去,进而展示在hass中</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554585&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E6%9C%AC%E6%9C%88%E7%94%B5%E8%B4%B9.jpg&x=2560&y=1080&a=true" alt="本月电费"></p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554604&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E6%9C%AC%E6%9C%88%E7%94%B5%E8%B4%B92.jpg&x=2560&y=1080&a=true" alt="本月电费2"></p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554605&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E6%9C%AC%E6%9C%88%E7%94%B5%E8%B4%B93.jpg&x=2560&y=1080&a=true" alt="本月电费3"></p>
+<h3 id="开关例子"><a href="#开关例子" class="headerlink" title="开关例子"></a>开关例子</h3><p>我在node-red里创建了一个能把家里所有电灯都关闭的开关,点击后会触发关灯流程</p>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554621&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E4%B8%80%E9%94%AE%E6%8B%89%E9%97%B8%E5%BC%80%E5%85%B3.jpg&x=2560&y=1080&a=true" alt="一键拉闸"></p>
+<blockquote>
+<p>开关配置</p>
+</blockquote>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554622&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E4%B8%80%E9%94%AE%E6%8B%89%E9%97%B8%E6%B5%81%E7%A8%8B.jpg&x=2560&y=1080&a=true" alt="拉闸流程配置"></p>
+<blockquote>
+<p>拉闸流程配置,因为我发现只执行一次有可能有些灯没法关掉,所以我延时重复执行了三次,确保所有灯光都关闭</p>
+</blockquote>
+<p><img src="https://nas.kcm-nixi.cn:8888/apps/files_sharing/publicpreview/b2wCqH6FigEPNm4?fileId=1554624&file=/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B03/%E4%B8%80%E9%94%AE%E6%8B%89%E9%97%B82.jpg&x=2560&y=1080&a=true" alt="hass拉闸"></p>
+<blockquote>
+<p>在hass首页上配置的拉闸按钮</p>
+</blockquote>
+<h1 id="结尾"><a href="#结尾" class="headerlink" title="结尾"></a>结尾</h1><p>好了好了以上就是node-red的一些个简单入门了,还有啥更高级的我也没玩明白你们自个儿探索去吧,反正我这也只是个入门向的文,排一排入门向的坑,如果有啥想交流的可以<a target="_blank" rel="noopener" href="https://weibo.com/u/2128252577">微博</a>私信我(滑稽滑稽).</p>
+<p>等下一篇我寻思来写通过node-mcu和ESPHOME来把你家里那些不智能的设备改装成智能设备罢(发出咕咕咕的声音)</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85/" rel="tag"># 智能家居</a>
+              <a href="/tags/Homeassistant/" rel="tag"># Homeassistant</a>
+              <a href="/tags/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B0/" rel="tag"># 从零开始搭建你的智能家居平台</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/11/16/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E6%90%AD%E5%BB%BA%E4%BD%A0%E7%9A%84%E6%99%BA%E8%83%BD%E5%AE%B6%E5%B1%85%E5%B9%B3%E5%8F%B02/" rel="prev" title="从零开始搭建你的智能家居平台(二)">
+      <i class="fa fa-chevron-left"></i> 从零开始搭建你的智能家居平台(二)
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9D%A5%E7%82%B9%E5%9F%BA%E7%A1%80%E8%8A%9D%E5%A3%AB"><span class="nav-number">1.</span> <span class="nav-text">来点基础芝士</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%AE%89%E8%A3%85"><span class="nav-number">2.</span> <span class="nav-text">如何安装</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E8%A3%85HomeAssistant%E8%8A%82%E7%82%B9"><span class="nav-number">3.</span> <span class="nav-text">安装HomeAssistant节点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#HomeAssistant%E5%AE%89%E8%A3%85Node-Red%E9%9B%86%E6%88%90"><span class="nav-number">4.</span> <span class="nav-text">HomeAssistant安装Node-Red集成</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8"><span class="nav-number">5.</span> <span class="nav-text">快速入门</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#inject%E8%8A%82%E7%82%B9"><span class="nav-number">6.</span> <span class="nav-text">inject节点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#debug%E8%8A%82%E7%82%B9"><span class="nav-number">7.</span> <span class="nav-text">debug节点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#delay%E8%8A%82%E7%82%B9"><span class="nav-number">8.</span> <span class="nav-text">delay节点</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#function%E8%8A%82%E7%82%B9"><span class="nav-number">9.</span> <span class="nav-text">function节点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E7%9A%84%E4%BF%9D%E5%AD%98%E5%92%8C%E4%BD%BF%E7%94%A8"><span class="nav-number">9.1.</span> <span class="nav-text">全局变量的保存和使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%95%E5%85%A5%E7%AC%AC%E4%B8%89%E6%96%B9npm%E5%8C%85"><span class="nav-number">9.2.</span> <span class="nav-text">引入第三方npm包</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#HomeAssistant%E7%BB%84%E4%BB%B6%E8%8A%82%E7%82%B9"><span class="nav-number">10.</span> <span class="nav-text">HomeAssistant组件节点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%90%9E%E4%B8%AATOKEN"><span class="nav-number">10.1.</span> <span class="nav-text">搞个TOKEN</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#current-state%E8%8A%82%E7%82%B9"><span class="nav-number">10.2.</span> <span class="nav-text">current state节点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#events-state%E8%8A%82%E7%82%B9"><span class="nav-number">10.3.</span> <span class="nav-text">events:state节点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#entity%E8%8A%82%E7%82%B9"><span class="nav-number">10.4.</span> <span class="nav-text">entity节点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%A0%E6%84%9F%E5%99%A8%E4%BE%8B%E5%AD%90"><span class="nav-number">10.4.1.</span> <span class="nav-text">传感器例子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%80%E5%85%B3%E4%BE%8B%E5%AD%90"><span class="nav-number">10.4.2.</span> <span class="nav-text">开关例子</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BB%93%E5%B0%BE"><span class="nav-number">11.</span> <span class="nav-text">结尾</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="超级有节操的逆袭"
+      src="/uploads/avatar.jpg">
+  <p class="site-author-name" itemprop="name">超级有节操的逆袭</p>
+  <div class="site-description" itemprop="description">随便写些有的没得,主要是给将来的我看的,别太指望了</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友情链接
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.hafuhafu.cn/" title="http:&#x2F;&#x2F;www.hafuhafu.cn&#x2F;" rel="noopener" target="_blank">葫芦的博客</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://blog.incubator4.com/" title="https:&#x2F;&#x2F;blog.incubator4.com" rel="noopener" target="_blank">学弟的博客</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+  <div class="beian"><a href="http://www.beian.miit.gov.cn/" rel="noopener" target="_blank">滇ICP备2021006417号-1 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">超级有节操的逆袭</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'zWVHiArCa20gFHLYt0uJXUau-gzGzoHsz',
+      appKey     : 'SLdIJkEQ6gS20lq3atQE2Sfz',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
